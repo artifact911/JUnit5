@@ -1,2 +1,5 @@
-package com.dmdev.junit.dto;public class User {
+package com.dmdev.junit.dto;
+
+public class User {
+
 }

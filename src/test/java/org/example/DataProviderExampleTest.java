@@ -8,7 +8,7 @@ import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class DataProviderExample {
+public class DataProviderExampleTest {
 
     private final MyClass myClass = new MyClass();
 
