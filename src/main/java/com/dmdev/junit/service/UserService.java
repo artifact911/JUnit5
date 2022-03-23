@@ -22,10 +22,13 @@ public class UserService {
     }
 
     public void add(User... users) {
-         this.users.addAll(Arrays.asList(users));
+        this.users.addAll(Arrays.asList(users));
     }
 
     public Optional<User> login(String name, String password) {
+        if (name == null || password == null) {
+            throw new IllegalArgumentException("Name or Password is null");
+        }
         return users.stream()
                     .filter(user -> user.getName().equals(name))
                     .filter(user -> user.getPassword().equals(password))
@@ -34,6 +37,6 @@ public class UserService {
 
     public Map<Integer, User> getAllConvertedById() {
         return users.stream()
-                .collect(toMap(User::getId, identity()));
+                    .collect(toMap(User::getId, identity()));
     }
 }

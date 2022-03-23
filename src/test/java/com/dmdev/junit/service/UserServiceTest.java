@@ -1,10 +1,6 @@
 package com.dmdev.junit.service;
 
 import com.dmdev.junit.dto.User;
-import org.assertj.core.api.Assertions;
-import org.hamcrest.MatcherAssert;
-import org.hamcrest.collection.IsEmptyCollection;
-import org.hamcrest.collection.IsMapContaining;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -17,10 +13,11 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertAll;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-// @TestInstance(TestInstance.Lifecycle.PER_METHOD) // по умолчанию. Инстанс создается для каждого метода и требует BeforeAll и AfterAll в static
+// @TestInstance(TestInstance.Lifecycle.PER_METHOD) // по умолчанию. Инстанс создается для каждого метода и требует BeforeAll и AfterAll
+// в static
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class UserServiceTest {
 
@@ -74,8 +71,19 @@ public class UserServiceTest {
     }
 
     @Test
+//    @org.junit.Test(expected = IllegalArgumentException.class) // было в JUnit4
+    void throwExceptionIfUserNameOrPasswordIsNull() {
+        System.out.println("Test 4: " + this);
+
+        assertAll(
+                () ->  assertThrows(IllegalArgumentException.class, () -> userService.login(null, IVAN.getPassword())),
+                () ->  assertThrows(IllegalArgumentException.class, () -> userService.login(IVAN.getName(), null))
+        );
+    }
+
+    @Test
     void usersConvertedToMapById() {
-        System.out.println("Test 6: " + this);
+        System.out.println("Test 5: " + this);
         userService.add(IVAN, PETR);
 
         Map<Integer, User> users = userService.getAllConvertedById();
@@ -89,7 +97,7 @@ public class UserServiceTest {
 
     @Test
     void loginFailIfPasswordIsNotCorrect() {
-        System.out.println("Test 4: " + this);
+        System.out.println("Test 6: " + this);
         userService.add(IVAN);
 
         var mayBeUser = userService.login(IVAN.getName(), "4434");
@@ -99,7 +107,7 @@ public class UserServiceTest {
 
     @Test
     void loginFailIfUserDosNotExist() {
-        System.out.println("Test 5: " + this);
+        System.out.println("Test 7: " + this);
         userService.add(IVAN);
 
         var mayBeUser = userService.login("roy", IVAN.getPassword());
