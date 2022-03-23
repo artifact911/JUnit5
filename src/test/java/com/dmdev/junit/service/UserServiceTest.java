@@ -1,6 +1,10 @@
 package com.dmdev.junit.service;
 
 import com.dmdev.junit.dto.User;
+import org.assertj.core.api.Assertions;
+import org.hamcrest.MatcherAssert;
+import org.hamcrest.collection.IsEmptyCollection;
+import org.hamcrest.collection.IsMapContaining;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -8,8 +12,11 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 
+import java.util.Map;
 import java.util.Optional;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -37,16 +44,20 @@ public class UserServiceTest {
     void usersIsEmptyIfNoUsersAdded() {
         System.out.println("Test 1: " + this);
         var users = userService.getAll();
+
+//        MatcherAssert.assertThat(users, IsEmptyCollection.empty()); // Hamcrest
         assertTrue(users.isEmpty(), () -> "User list should be empty");
     }
 
     @Test
     void usersSizeIfUserAdded() {
         System.out.println("Test 2: " + this);
-        userService.add(IVAN);
-        userService.add(PETR);
+        userService.add(IVAN, PETR);
+
         var users = userService.getAll();
-        assertEquals(2, users.size());
+
+        assertThat(users).hasSize(2); // AssertJ
+//        assertEquals(2, users.size()); // JUnit
     }
 
     @Test
@@ -56,8 +67,25 @@ public class UserServiceTest {
 
         Optional<User> mayBeUser = userService.login(IVAN.getName(), IVAN.getPassword());
 
-        assertTrue(mayBeUser.isPresent());
-        mayBeUser.ifPresent(user -> assertEquals(IVAN, user));
+        assertThat(mayBeUser).isPresent();
+//        assertTrue(mayBeUser.isPresent());
+        mayBeUser.ifPresent(user -> assertThat(user).isEqualTo(IVAN));
+//        mayBeUser.ifPresent(user -> assertEquals(IVAN, user));
+    }
+
+    @Test
+    void usersConvertedToMapById() {
+        System.out.println("Test 6: " + this);
+        userService.add(IVAN, PETR);
+
+        Map<Integer, User> users = userService.getAllConvertedById();
+
+//        MatcherAssert.assertThat(users, IsMapContaining.hasKey(IVAN.getId())); // Hamcrest
+
+        assertAll(
+                () -> assertThat(users).containsKeys(IVAN.getId(), PETR.getId()),
+                () -> assertThat(users).containsValues(IVAN, PETR)
+        );
     }
 
     @Test

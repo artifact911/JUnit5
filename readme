@@ -1,3 +1,7 @@
 Platform - для работы в JVM
 Jupiter - API для взаимодействия разраба с фреймворком
 Vintage - для обратной совместимости
+
+Lesson 5 - create Launcher
+Lesson 6 - TDD
+Lesson 7 - AssertJ & Hamcrest
