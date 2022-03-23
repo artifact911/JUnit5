@@ -81,7 +81,6 @@ public class UserServiceTest {
         Map<Integer, User> users = userService.getAllConvertedById();
 
 //        MatcherAssert.assertThat(users, IsMapContaining.hasKey(IVAN.getId())); // Hamcrest
-
         assertAll(
                 () -> assertThat(users).containsKeys(IVAN.getId(), PETR.getId()),
                 () -> assertThat(users).containsValues(IVAN, PETR)
