@@ -5,3 +5,8 @@ Vintage - для обратной совместимости
 Lesson 5 - create Launcher
 Lesson 6 - TDD
 Lesson 7 - AssertJ & Hamcrest
+Lesson 8 - Testing Exceptions
+Lesson 9 - Tags & Filters
+    - mvn clean test -Dgroups=login
+    //[ERROR] Failed to execute goal org.apache.maven.plugins:maven-compiler-plugin:3.1:compile (default-compile) on project JUnit5Parametrized: Fatal error compiling: invalid target release: 17 -> [Help 1]
+

@@ -5,6 +5,7 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 
@@ -18,6 +19,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 // @TestInstance(TestInstance.Lifecycle.PER_METHOD) // по умолчанию. Инстанс создается для каждого метода и требует BeforeAll и AfterAll
 // в static
+@Tag("fast")
+@Tag("user")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class UserServiceTest {
 
@@ -58,6 +61,7 @@ public class UserServiceTest {
     }
 
     @Test
+    @Tag("login")
     void loginSuccessIfUserExist() {
         System.out.println("Test 3: " + this);
         userService.add(IVAN);
@@ -71,6 +75,7 @@ public class UserServiceTest {
     }
 
     @Test
+    @Tag("login")
 //    @org.junit.Test(expected = IllegalArgumentException.class) // было в JUnit4
     void throwExceptionIfUserNameOrPasswordIsNull() {
         System.out.println("Test 4: " + this);
@@ -96,6 +101,7 @@ public class UserServiceTest {
     }
 
     @Test
+    @Tag("login")
     void loginFailIfPasswordIsNotCorrect() {
         System.out.println("Test 6: " + this);
         userService.add(IVAN);
@@ -106,6 +112,7 @@ public class UserServiceTest {
     }
 
     @Test
+    @Tag("login")
     void loginFailIfUserDosNotExist() {
         System.out.println("Test 7: " + this);
         userService.add(IVAN);
