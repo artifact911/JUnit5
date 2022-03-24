@@ -10,4 +10,5 @@ Lesson 9 - Tags & Filters
     - mvn clean test -Dgroups=login
     //[ERROR] Failed to execute goal org.apache.maven.plugins:maven-compiler-plugin:3.1:compile (default-compile) on project JUnit5Parametrized: Fatal error compiling: invalid target release: 17 -> [Help 1]
 Lesson 10 - Test order. Nested tests
+Lesson 11 - Dependency Injection
 

@@ -1,6 +1,7 @@
 package com.dmdev.junit.service;
 
 import com.dmdev.junit.dto.User;
+import com.dmdev.junit.paramresolver.UserServiceParamResolver;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -11,8 +12,10 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestMethodOrder;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 import java.util.Map;
 import java.util.Optional;
@@ -28,6 +31,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @Tag("user")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @TestMethodOrder(MethodOrderer.DisplayName.class) // Избегать это юзать
+@ExtendWith({
+        UserServiceParamResolver.class
+})
 public class UserServiceTest {
 
     private static final User PETR = User.of(2, "Petr", "111");
@@ -35,21 +41,25 @@ public class UserServiceTest {
 
     private UserService userService;
 
+    UserServiceTest(TestInfo testInfo) {
+        System.out.println();
+    }
+
     @BeforeAll
     void init() {
         System.out.println("Before all: " + this);
     }
 
     @BeforeEach
-    void prepare() {
+    void prepare(UserService userService) {
         System.out.println("Before each: " + this);
-        userService = new UserService();
+        this.userService = userService;
     }
 
     @Test
     @Order(1)
     @DisplayName("users will be empty")
-    void usersIsEmptyIfNoUsersAdded() {
+    void usersIsEmptyIfNoUsersAdded(UserService userService) {
         System.out.println("Test 1: " + this);
         var users = userService.getAll();
 
