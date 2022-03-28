@@ -16,9 +16,21 @@ import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestMethodOrder;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.ArgumentsSource;
+import org.junit.jupiter.params.provider.CsvFileSource;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.EmptySource;
+import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.NullSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertAll;
@@ -122,18 +134,6 @@ public class UserServiceTest {
         }
 
         @Test
-//    @org.junit.Test(expected = IllegalArgumentException.class) // было в JUnit4
-        void throwExceptionIfUserNameOrPasswordIsNull() {
-            System.out.println("Test 4: " + this);
-
-            assertAll(
-                    () -> assertThrows(IllegalArgumentException.class, () -> userService.login(null, IVAN.getPassword())),
-                    () -> assertThrows(IllegalArgumentException.class, () -> userService.login(IVAN.getName(), null))
-            );
-        }
-
-
-        @Test
         void loginFailIfPasswordIsNotCorrect() {
             System.out.println("Test 6: " + this);
             userService.add(IVAN);
@@ -152,5 +152,48 @@ public class UserServiceTest {
 
             assertTrue(mayBeUser.isEmpty());
         }
+
+        @Test
+//    @org.junit.Test(expected = IllegalArgumentException.class) // было в JUnit4
+        void throwExceptionIfUserNameOrPasswordIsNull() {
+            System.out.println("Test 4: " + this);
+
+            assertAll(
+                    () -> assertThrows(IllegalArgumentException.class, () -> userService.login(null, IVAN.getPassword())),
+                    () -> assertThrows(IllegalArgumentException.class, () -> userService.login(IVAN.getName(), null))
+            );
+        }
+
+        @ParameterizedTest(name = "{arguments} test")
+//        @ArgumentsSource()
+//        @NullSource // работа с одним параметром
+//        @EmptySource // работа с одним параметром
+//        @NullAndEmptySource // заменитель двух верхних
+//        @ValueSource(strings = {
+//                "Ivan", "Petr"
+//        }) // работа с одним параметром, например name. Пердаем
+//        @EnumSource
+        @MethodSource("com.dmdev.junit.service.UserServiceTest#getArgumentsForLoginTest")
+//        @CsvFileSource(resources = "/login-test-data.csv", delimiter = ',', numLinesToSkip = 1)
+//        @CsvSource({            // аналог верхнего но не нужно создавать файл
+//                "Ivan", "123",
+//                "Petr", "111"
+//        })
+        @DisplayName("login param test")
+        void loginParametrizedTest(String name, String password, Optional<User> user) {
+            userService.add(IVAN, PETR);
+
+            var maybeUser = userService.login(name, password);
+            assertThat(maybeUser).isEqualTo(user);
+        }
+    }
+
+    static Stream<Arguments> getArgumentsForLoginTest() {
+        return Stream.of(
+                Arguments.of("Ivan", "123", Optional.of(IVAN)),
+                Arguments.of("Petr", "111", Optional.of(PETR)),
+                Arguments.of("Petr", "dummy", Optional.empty()),
+                Arguments.of("dummy", "111", Optional.empty())
+        );
     }
 }
