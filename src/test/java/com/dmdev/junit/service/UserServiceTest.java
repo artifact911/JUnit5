@@ -1,7 +1,12 @@
 package com.dmdev.junit.service;
 
+import com.dmdev.junit.TestBase;
 import com.dmdev.junit.dto.User;
-import com.dmdev.junit.paramresolver.UserServiceParamResolver;
+import com.dmdev.junit.extension.ConditionalExtension;
+import com.dmdev.junit.extension.GlobalExtension;
+import com.dmdev.junit.extension.PostProcessingExtension;
+import com.dmdev.junit.extension.ThrowableExtension;
+import com.dmdev.junit.extension.UserServiceParamResolver;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -22,16 +27,9 @@ import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.ArgumentsSource;
-import org.junit.jupiter.params.provider.CsvFileSource;
-import org.junit.jupiter.params.provider.CsvSource;
-import org.junit.jupiter.params.provider.EmptySource;
-import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.junit.jupiter.params.provider.NullAndEmptySource;
-import org.junit.jupiter.params.provider.NullSource;
-import org.junit.jupiter.params.provider.ValueSource;
 
+import java.io.IOException;
 import java.time.Duration;
 import java.util.Map;
 import java.util.Optional;
@@ -53,9 +51,13 @@ import static org.junit.jupiter.api.RepeatedTest.LONG_DISPLAY_NAME;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @TestMethodOrder(MethodOrderer.DisplayName.class) // Избегать это юзать
 @ExtendWith({
-        UserServiceParamResolver.class
+        UserServiceParamResolver.class,
+        PostProcessingExtension.class,
+        ConditionalExtension.class,
+        ThrowableExtension.class
+//        GlobalExtension.class // вынести в TestBase
 })
-public class UserServiceTest {
+public class UserServiceTest extends TestBase {
 
     private static final User PETR = User.of(2, "Petr", "111");
     private static final User IVAN = User.of(1, "Ivan", "123");
@@ -81,6 +83,9 @@ public class UserServiceTest {
     @Order(1)
     @DisplayName("users will be empty")
     void usersIsEmptyIfNoUsersAdded(UserService userService) {
+        if(true){
+            throw new RuntimeException();
+        }
         System.out.println("Test 1: " + this);
         var users = userService.getAll();
 
@@ -155,8 +160,7 @@ public class UserServiceTest {
         }
 
         //        @Test
-        @RepeatedTest(value = 5, name = LONG_DISPLAY_NAME)
-        // повтоярем, на случай, что тест завалится
+        @RepeatedTest(value = 5, name = LONG_DISPLAY_NAME) // повтоярем, на случай, что тест завалится
         void loginFailIfUserDosNotExist(RepetitionInfo repetitionInfo) { // инфо о повторениях и возможно захочем это как-то заюзать
             System.out.println("Test 7: " + this);
             userService.add(IVAN);
@@ -165,6 +169,7 @@ public class UserServiceTest {
         }
 
         @Test
+        @Disabled
         void checkFunctionalityPerformance() {
 
            /* // для запуска нашего теста в другом потоке
