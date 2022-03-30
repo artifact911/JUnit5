@@ -6,15 +6,19 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.RepeatedTest;
+import org.junit.jupiter.api.RepetitionInfo;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestMethodOrder;
+import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -28,14 +32,19 @@ import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.NullSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import java.time.Duration;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTimeout;
+import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.RepeatedTest.LONG_DISPLAY_NAME;
 
 // @TestInstance(TestInstance.Lifecycle.PER_METHOD) // по умолчанию. Инстанс создается для каждого метода и требует BeforeAll и AfterAll
 // в static
@@ -118,6 +127,7 @@ public class UserServiceTest {
     @Nested
     @DisplayName("Test user login functionality")
     @Tag("login")
+    @Timeout(value = 200L, unit = TimeUnit.MILLISECONDS) // укладываемся ли мы во время выполнения. Лучше подходит для integration
     class LoginTest {
 
         @Test
@@ -134,6 +144,7 @@ public class UserServiceTest {
         }
 
         @Test
+        @Disabled("flaky, need to see")
         void loginFailIfPasswordIsNotCorrect() {
             System.out.println("Test 6: " + this);
             userService.add(IVAN);
@@ -143,28 +154,44 @@ public class UserServiceTest {
             assertTrue(mayBeUser.isEmpty());
         }
 
-        @Test
-        void loginFailIfUserDosNotExist() {
+        //        @Test
+        @RepeatedTest(value = 5, name = LONG_DISPLAY_NAME)
+        // повтоярем, на случай, что тест завалится
+        void loginFailIfUserDosNotExist(RepetitionInfo repetitionInfo) { // инфо о повторениях и возможно захочем это как-то заюзать
             System.out.println("Test 7: " + this);
             userService.add(IVAN);
-
             var mayBeUser = userService.login("roy", IVAN.getPassword());
-
             assertTrue(mayBeUser.isEmpty());
         }
 
         @Test
+        void checkFunctionalityPerformance() {
+
+           /* // для запуска нашего теста в другом потоке
+            System.out.println(Thread.currentThread().getName());
+            var result = assertTimeoutPreemptively(Duration.ofMillis(200), () -> {
+                System.out.println(Thread.currentThread().getName());
+                Thread.sleep(300);
+                return userService.login("dummy", IVAN.getPassword());*/
+
+                var result = assertTimeout(Duration.ofMillis(200), () -> {
+                    Thread.sleep(300);
+                    return userService.login("dummy", IVAN.getPassword());
+                });
+            }
+
+            @Test
 //    @org.junit.Test(expected = IllegalArgumentException.class) // было в JUnit4
-        void throwExceptionIfUserNameOrPasswordIsNull() {
-            System.out.println("Test 4: " + this);
+            void throwExceptionIfUserNameOrPasswordIsNull () {
+                System.out.println("Test 4: " + this);
 
-            assertAll(
-                    () -> assertThrows(IllegalArgumentException.class, () -> userService.login(null, IVAN.getPassword())),
-                    () -> assertThrows(IllegalArgumentException.class, () -> userService.login(IVAN.getName(), null))
-            );
-        }
+                assertAll(
+                        () -> assertThrows(IllegalArgumentException.class, () -> userService.login(null, IVAN.getPassword())),
+                        () -> assertThrows(IllegalArgumentException.class, () -> userService.login(IVAN.getName(), null))
+                );
+            }
 
-        @ParameterizedTest(name = "{arguments} test")
+            @ParameterizedTest(name = "{arguments} test")
 //        @ArgumentsSource()
 //        @NullSource // работа с одним параметром
 //        @EmptySource // работа с одним параметром
@@ -173,27 +200,27 @@ public class UserServiceTest {
 //                "Ivan", "Petr"
 //        }) // работа с одним параметром, например name. Пердаем
 //        @EnumSource
-        @MethodSource("com.dmdev.junit.service.UserServiceTest#getArgumentsForLoginTest")
+            @MethodSource("com.dmdev.junit.service.UserServiceTest#getArgumentsForLoginTest")
 //        @CsvFileSource(resources = "/login-test-data.csv", delimiter = ',', numLinesToSkip = 1)
 //        @CsvSource({            // аналог верхнего но не нужно создавать файл
 //                "Ivan", "123",
 //                "Petr", "111"
 //        })
-        @DisplayName("login param test")
-        void loginParametrizedTest(String name, String password, Optional<User> user) {
-            userService.add(IVAN, PETR);
+            @DisplayName("login param test")
+            void loginParametrizedTest (String name, String password, Optional < User > user){
+                userService.add(IVAN, PETR);
 
-            var maybeUser = userService.login(name, password);
-            assertThat(maybeUser).isEqualTo(user);
+                var maybeUser = userService.login(name, password);
+                assertThat(maybeUser).isEqualTo(user);
+            }
+        }
+
+        static Stream<Arguments> getArgumentsForLoginTest() {
+            return Stream.of(
+                    Arguments.of("Ivan", "123", Optional.of(IVAN)),
+                    Arguments.of("Petr", "111", Optional.of(PETR)),
+                    Arguments.of("Petr", "dummy", Optional.empty()),
+                    Arguments.of("dummy", "111", Optional.empty())
+            );
         }
     }
-
-    static Stream<Arguments> getArgumentsForLoginTest() {
-        return Stream.of(
-                Arguments.of("Ivan", "123", Optional.of(IVAN)),
-                Arguments.of("Petr", "111", Optional.of(PETR)),
-                Arguments.of("Petr", "dummy", Optional.empty()),
-                Arguments.of("dummy", "111", Optional.empty())
-        );
-    }
-}
