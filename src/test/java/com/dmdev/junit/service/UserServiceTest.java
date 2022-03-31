@@ -30,7 +30,11 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.io.IOException;
 import java.time.Duration;
@@ -46,6 +50,11 @@ import static org.junit.jupiter.api.Assertions.assertTimeout;
 import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.RepeatedTest.LONG_DISPLAY_NAME;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.reset;
+import static org.mockito.Mockito.verify;
 
 // @TestInstance(TestInstance.Lifecycle.PER_METHOD) // по умолчанию. Инстанс создается для каждого метода и требует BeforeAll и AfterAll
 // в static
@@ -57,6 +66,7 @@ import static org.junit.jupiter.api.RepeatedTest.LONG_DISPLAY_NAME;
         UserServiceParamResolver.class,
         PostProcessingExtension.class,
         ConditionalExtension.class,
+        MockitoExtension.class
 //        ThrowableExtension.class
 //        GlobalExtension.class // вынести в TestBase
 })
@@ -65,8 +75,14 @@ public class UserServiceTest extends TestBase {
     private static final User PETR = User.of(2, "Petr", "111");
     private static final User IVAN = User.of(1, "Ivan", "123");
 
-    private UserService userService;
+    @Mock(lenient = true)
     private UserDao userDao;
+
+    @InjectMocks
+    private UserService userService;
+
+    @Captor
+    private ArgumentCaptor<Integer> argumentCaptor;
 
     UserServiceTest(TestInfo testInfo) {
         System.out.println();
@@ -80,17 +96,27 @@ public class UserServiceTest extends TestBase {
     @BeforeEach
     void prepare() {
         System.out.println("Before each: " + this);
-//        this.userDao = Mockito.mock(UserDao.class); // for mock
+//        lenient().when(userDao.delete(IVAN.getId())).thenReturn(true);
+        doReturn(true).when(userDao).delete(IVAN.getId());
+
+        // теперь есть аннотации
+      /*  this.userDao = Mockito.mock(UserDao.class); // for mock
         this.userDao = Mockito.spy(new UserDao()); // for spy
-        this.userService = new UserService(userDao);
+        this.userService = new UserService(userDao);*/
+    }
+
+    @Test
+    void throwExceptionIfDataBaseIsNotAvailable() {
+        doThrow(RuntimeException.class).when(userDao).delete(IVAN.getId());
+
+        assertThrows(RuntimeException.class, () -> userService.delete(IVAN.getId()));
     }
 
     @Test
     void shouldDeleteExistedUser() {
         userService.add(IVAN);
-        Mockito.doReturn(true).when(userDao).delete(IVAN.getId());
+//        Mockito.doReturn(true).when(userDao).delete(IVAN.getId()); // унесли в @BeforeEach
 //        Mockito.doReturn(true).when(userDao).delete(Mockito.any());
-
 //        Mockito.when(userDao.delete(IVAN.getId()))
 //               .thenReturn(true)
 //               .thenReturn(false);
@@ -103,10 +129,12 @@ public class UserServiceTest extends TestBase {
 //        Mockito.verify(userDao, Mockito.atLeast(2)).delete(IVAN.getId()); // вызвался метод как минимум 2 раза
 //        Mockito.verify(userDao, Mockito.times(3)).delete(IVAN.getId()); // вызвался метод конкретно 3 раза
 
-        var argumentCaptor = ArgumentCaptor.forClass(Integer.class); // отловитлавливатель Integer в mock
-        Mockito.verify(userDao, Mockito.times(3)).delete(argumentCaptor.capture()); // тут отловит
+//        var argumentCaptor = ArgumentCaptor.forClass(Integer.class); // отловитлавливатель Integer в mock // аннотация теперь есть
+        verify(userDao, Mockito.times(3)).delete(argumentCaptor.capture()); // тут отловит
 
         assertThat(argumentCaptor.getValue()).isEqualTo(IVAN.getId()); // а тут проверит
+
+        reset(userDao); // очистит мок, если нужно переиспользовать. Лучше в @BeforeEach создавать новый
 
         assertThat(deleteResult).isTrue();
     }
