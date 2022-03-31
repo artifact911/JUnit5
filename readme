@@ -25,4 +25,5 @@ Lesson 16 - Mockito. Test Doubles
     Spy - proxy для реальных объектов, которые ведут себя точно также, но могут быть запрограммированы как mocks
 
 Lesson 17 - Mockito. Mock
+Lesson 18 - Mockito. Spy
 

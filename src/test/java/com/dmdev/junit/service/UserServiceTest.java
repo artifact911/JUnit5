@@ -29,6 +29,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 
 import java.io.IOException;
@@ -79,23 +80,33 @@ public class UserServiceTest extends TestBase {
     @BeforeEach
     void prepare() {
         System.out.println("Before each: " + this);
-        this.userDao = Mockito.mock(UserDao.class);
+//        this.userDao = Mockito.mock(UserDao.class); // for mock
+        this.userDao = Mockito.spy(new UserDao()); // for spy
         this.userService = new UserService(userDao);
     }
 
     @Test
     void shouldDeleteExistedUser() {
         userService.add(IVAN);
-//        Mockito.doReturn(true).when(userDao).delete(IVAN.getId());
+        Mockito.doReturn(true).when(userDao).delete(IVAN.getId());
 //        Mockito.doReturn(true).when(userDao).delete(Mockito.any());
 
-        Mockito.when(userDao.delete(IVAN.getId()))
-               .thenReturn(true)
-               .thenReturn(false);
+//        Mockito.when(userDao.delete(IVAN.getId()))
+//               .thenReturn(true)
+//               .thenReturn(false);
 
         var deleteResult = userService.delete(IVAN.getId());
         System.out.println(userService.delete(IVAN.getId()));
         System.out.println(userService.delete(IVAN.getId()));
+
+//        Mockito.verify(userDao).delete(IVAN.getId()); // проверили что вызвался метод 1 раз
+//        Mockito.verify(userDao, Mockito.atLeast(2)).delete(IVAN.getId()); // вызвался метод как минимум 2 раза
+//        Mockito.verify(userDao, Mockito.times(3)).delete(IVAN.getId()); // вызвался метод конкретно 3 раза
+
+        var argumentCaptor = ArgumentCaptor.forClass(Integer.class); // отловитлавливатель Integer в mock
+        Mockito.verify(userDao, Mockito.times(3)).delete(argumentCaptor.capture()); // тут отловит
+
+        assertThat(argumentCaptor.getValue()).isEqualTo(IVAN.getId()); // а тут проверит
 
         assertThat(deleteResult).isTrue();
     }
