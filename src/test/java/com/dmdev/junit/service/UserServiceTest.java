@@ -1,6 +1,7 @@
 package com.dmdev.junit.service;
 
 import com.dmdev.junit.TestBase;
+import com.dmdev.junit.dao.UserDao;
 import com.dmdev.junit.dto.User;
 import com.dmdev.junit.extension.ConditionalExtension;
 import com.dmdev.junit.extension.GlobalExtension;
@@ -28,6 +29,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.mockito.Mockito;
 
 import java.io.IOException;
 import java.time.Duration;
@@ -54,7 +56,7 @@ import static org.junit.jupiter.api.RepeatedTest.LONG_DISPLAY_NAME;
         UserServiceParamResolver.class,
         PostProcessingExtension.class,
         ConditionalExtension.class,
-        ThrowableExtension.class
+//        ThrowableExtension.class
 //        GlobalExtension.class // вынести в TestBase
 })
 public class UserServiceTest extends TestBase {
@@ -63,6 +65,7 @@ public class UserServiceTest extends TestBase {
     private static final User IVAN = User.of(1, "Ivan", "123");
 
     private UserService userService;
+    private UserDao userDao;
 
     UserServiceTest(TestInfo testInfo) {
         System.out.println();
@@ -74,18 +77,34 @@ public class UserServiceTest extends TestBase {
     }
 
     @BeforeEach
-    void prepare(UserService userService) {
+    void prepare() {
         System.out.println("Before each: " + this);
-        this.userService = userService;
+        this.userDao = Mockito.mock(UserDao.class);
+        this.userService = new UserService(userDao);
+    }
+
+    @Test
+    void shouldDeleteExistedUser() {
+        userService.add(IVAN);
+//        Mockito.doReturn(true).when(userDao).delete(IVAN.getId());
+//        Mockito.doReturn(true).when(userDao).delete(Mockito.any());
+
+        Mockito.when(userDao.delete(IVAN.getId()))
+               .thenReturn(true)
+               .thenReturn(false);
+
+        var deleteResult = userService.delete(IVAN.getId());
+        System.out.println(userService.delete(IVAN.getId()));
+        System.out.println(userService.delete(IVAN.getId()));
+
+        assertThat(deleteResult).isTrue();
     }
 
     @Test
     @Order(1)
     @DisplayName("users will be empty")
     void usersIsEmptyIfNoUsersAdded(UserService userService) {
-        if(true){
-            throw new RuntimeException();
-        }
+//        if(true){throw new RuntimeException();} // для 57 строки
         System.out.println("Test 1: " + this);
         var users = userService.getAll();
 

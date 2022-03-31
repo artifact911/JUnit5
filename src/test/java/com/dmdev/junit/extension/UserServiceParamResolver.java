@@ -1,5 +1,6 @@
 package com.dmdev.junit.extension;
 
+import com.dmdev.junit.dao.UserDao;
 import com.dmdev.junit.service.UserService;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.ParameterContext;
@@ -22,6 +23,6 @@ public class UserServiceParamResolver implements ParameterResolver {
        var store = extensionContext
 //               .getStore(Namespace.create(UserService.class));
                .getStore(Namespace.create(extensionContext.getTestMethod()));
-        return store.getOrComputeIfAbsent(UserService.class, it -> new UserService());
+        return store.getOrComputeIfAbsent(UserService.class, it -> new UserService(new UserDao()));
     }
 }

@@ -9,10 +9,20 @@ Lesson 8 - Testing Exceptions
 Lesson 9 - Tags & Filters
     - mvn clean test -Dgroups=login
     //[ERROR] Failed to execute goal org.apache.maven.plugins:maven-compiler-plugin:3.1:compile (default-compile) on project JUnit5Parametrized: Fatal error compiling: invalid target release: 17 -> [Help 1]
+
 Lesson 10 - Test order. Nested tests
 Lesson 11 - Dependency Injection
 Lesson 12 - Parametrized Test
 Lesson 13 - Flaky test. Timeouts
 Lesson 15 - Extensions Model. Practice
             -ea -Dskip - передаем параметром
+
+Lesson 16 - Mockito. Test Doubles
+    Dummy - объекты, которые не используются во время тестирования. Нужны только для заполнения параметров методов.
+    Fake - объектыс работающим функционалом, но не подходящим для production. Например, запуск in-memory базы данных для тестирования DAO слоя.
+    Stub - объекты, которые используются mocks и spies для ответа (Answer) на вызовы методов во время тестов
+    Mock - запрограммированные объекты, возвращающие ожидаемый результат (stubs) на вызов определенных методов
+    Spy - proxy для реальных объектов, которые ведут себя точно также, но могут быть запрограммированы как mocks
+
+Lesson 17 - Mockito. Mock
 
